@@ -3,12 +3,12 @@ package com.example.spring.security.jwt.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class WebSecurityConfig {
@@ -25,19 +25,19 @@ public class WebSecurityConfig {
                         frame.disable();
                     });
                 })
+                .addFilterAfter(new JWTFilter(), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(
                         authorizationManagerRequestMatcherRegistry -> authorizationManagerRequestMatcherRegistry
                                 .requestMatchers("/").permitAll()
                                 .requestMatchers("/h2-console/**").permitAll()
                                 .requestMatchers(HttpMethod.POST,"/login").permitAll()
                                 .requestMatchers(HttpMethod.POST,"/users").permitAll()
-                                .requestMatchers("/admins").hasAnyRole("ADMIN")
                                 .requestMatchers(HttpMethod.GET,"/users").hasAnyRole("USERS", "MANAGERS")
+                                .requestMatchers("/managers").hasAnyRole("MANAGERS")
                                 .anyRequest().authenticated())
                                 .sessionManagement(session -> {
                                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-                                })
-                .httpBasic(Customizer.withDefaults());
+                                });
         return http.build();
     }
 
